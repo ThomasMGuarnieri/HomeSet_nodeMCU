@@ -16,10 +16,10 @@ const char *ssid = "MG_Pedras";
 const char *password = "99787568";
 
 /* Firebase API Key */
-const char *api_key = "AIzaSyDLp3EJm1xFVZhOVM4_9o3c6w1zqNa3QRo";
+const char *api_key = "";
 
 /* Firebase url do banco de dados */
-const char *database_url = "https://homeset-b4916-default-rtdb.firebaseio.com/";
+const char *database_url = "";
 
 /* Firebase data object */
 FirebaseData fbdo;
