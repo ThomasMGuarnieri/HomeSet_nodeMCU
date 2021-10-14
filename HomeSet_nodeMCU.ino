@@ -16,27 +16,27 @@ const char *ssid = "MG_Pedras";
 const char *password = "99787568";
 
 /* Firebase API Key */
-const char *api_key = "";
+const char *api_key = "AIzaSyDLp3EJm1xFVZhOVM4_9o3c6w1zqNa3QRo";
 
 /* Firebase url do banco de dados */
-const char *database_url = "";
+const char *database_url = "https://homeset-b4916-default-rtdb.firebaseio.com/";
 
 /* Firebase data object */
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+/* Variaveis de controle */
 unsigned long sendDataPrevMillis = 0;
 bool signupOK = false;
-int testCount = 0;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  
+
   Serial.begin(115200);
   WiFi.begin(ssid, password);
   Serial.print("Conectando a rede Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED){
+  while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(300);
   }
@@ -57,31 +57,23 @@ void setup() {
   config.token_status_callback = tokenStatusCallback;
   config.max_token_generation_retry = 5;
 
-  /* Sign up */
-  /*if (Firebase.signUp(&config, &auth, "", "")){
-    Serial.println("Firebase singUp OK");
-    signupOK = true;
-  } else{
-    Serial.printf("SingUp failed");
-    Serial.printf("%s\n", config.signer.signupError.message.c_str());
-  }*/
-
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 }
 void loop() {
-  if (Firebase.ready() && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)){
+  if (Firebase.ready() && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
-    
-    /* Escreve um numero do tipo Int no banco de dados, no caminho test/int */
-    if (Firebase.RTDB.setInt(&fbdo, "test/int", testCount)){
-      Serial.println("INSERTED");
-      Serial.println("PATH: " + fbdo.dataPath());
-      Serial.println("TYPE: " + fbdo.dataType());
-    } else {
-      Serial.println("FAILED");
-      Serial.println("ERROR: " + fbdo.errorReason());
-    }
-    testCount++;
+
+    FirebaseJson json;
+    json.add("devices_id", 1);
+
+    Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, "device_log/devices_id", &json) ? "ok" : fbdo.errorReason().c_str());
+
+    /*
+      Firebase.RTDB.setInt(&fbdo, "device_log/devices_id", testCount)
+      Firebase.RTDB.setInt(&fbdo, "device_log/power", testCount)
+      Firebase.RTDB.setInt(&fbdo, "device_log/requested_power_state", testCount)
+      Firebase.RTDB.setInt(&fbdo, "device_log/change", testCount)
+    */
   }
-} 
+}
