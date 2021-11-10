@@ -1,7 +1,5 @@
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESP8266WiFi.h>
-#include <Firebase_ESP_Client.h>
+#include <FirebaseESP8266.h>
 
 /* Auxilia nas questões referentes ao token */
 #include "addons/TokenHelper.h"
@@ -12,14 +10,14 @@
 #define USER_PASSWORD "tester"
 
 /* Credenciais de acesso a rede Wifi */
-const char *ssid = "MG_Pedras";
-const char *password = "99787568";
+#define WIFI_SSID "MG_Pedras"
+#define WIFI_PASSWORD "99787568"
 
 /* Firebase API Key */
-const char *api_key = "AIzaSyDLp3EJm1xFVZhOVM4_9o3c6w1zqNa3QRo";
+#define API_KEY "AIzaSyDLp3EJm1xFVZhOVM4_9o3c6w1zqNa3QRo"
 
 /* Firebase url do banco de dados */
-const char *database_url = "https://homeset-b4916-default-rtdb.firebaseio.com/";
+#define DATABASE_URL "https://homeset-b4916-default-rtdb.firebaseio.com/"
 
 /* Firebase data object */
 FirebaseData fbdo;
@@ -28,52 +26,51 @@ FirebaseConfig config;
 
 /* Variaveis de controle */
 unsigned long sendDataPrevMillis = 0;
-bool signupOK = false;
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
-
   Serial.begin(115200);
-  WiFi.begin(ssid, password);
-  Serial.print("Conectando a rede Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(300);
-  }
 
-  /* Mostra o IP local no console */
-  Serial.println();
-  Serial.print("Conectado com o IP: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
+  connectToInternet(WIFI_SSID, WIFI_PASSWORD);
 
   /* Credenciais de login */
   auth.user.email = USER_EMAIL;
   auth.user.password = USER_PASSWORD;
 
   /* Configurações API Firebase */
-  config.api_key = api_key;
-  config.database_url = database_url;
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
   config.token_status_callback = tokenStatusCallback;
   config.max_token_generation_retry = 5;
 
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 }
+
+void connectToInternet(char *ssid, char *password) {
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando a rede Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(300);
+  }
+  
+  /* Mostra o IP local no console */
+  Serial.println();
+  Serial.print("Conectado com o IP: ");
+  Serial.println(WiFi.localIP());
+  Serial.println();
+}
+
 void loop() {
-  if (Firebase.ready() && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
+  if (Firebase.ready() && (millis() - sendDataPrevMillis > 60000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
 
     FirebaseJson json;
-    json.add("devices_id", 1);
+    json.set("-MkA1cAXZuQW5ITG7Hhl/power", true);
+    json.set("-MkA1cAXZuQW5ITG7Hhl/time", sendDataPrevMillis);
+    json.set("-MkIPpNw2AR8JDbgCsi9/power", true);
+    json.set("-MkIPpNw2AR8JDbgCsi9/time", sendDataPrevMillis);
 
-    Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, "device_log/devices_id", &json) ? "ok" : fbdo.errorReason().c_str());
-
-    /*
-      Firebase.RTDB.setInt(&fbdo, "device_log/devices_id", testCount)
-      Firebase.RTDB.setInt(&fbdo, "device_log/power", testCount)
-      Firebase.RTDB.setInt(&fbdo, "device_log/requested_power_state", testCount)
-      Firebase.RTDB.setInt(&fbdo, "device_log/change", testCount)
-    */
+    Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, "devices_log", &json) ? "ok" : fbdo.errorReason().c_str());
   }
 }
