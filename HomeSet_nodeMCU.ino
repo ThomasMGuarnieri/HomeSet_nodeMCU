@@ -23,6 +23,7 @@
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
+FirebaseJsonData result;
 
 /* Variaveis de controle */
 unsigned long sendDataPrevMillis = 0;
@@ -62,15 +63,30 @@ void connectToInternet(char *ssid, char *password) {
 }
 
 void loop() {
-  if (Firebase.ready() && (millis() - sendDataPrevMillis > 60000 || sendDataPrevMillis == 0)) {
+  if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
 
-    FirebaseJson json;
+    FirebaseJson searchJson;
+
+    if (Firebase.RTDB.getJSON(&fbdo, "devices/", &searchJson)) {
+      
+      searchJson.get(result, "-MkA1cAXZuQW5ITG7Hhl/power");
+
+      Serial.println(result.type);
+      if (result.type == "boolean" && result.to<bool>() == true) {
+        Serial.println("LIGADO (O dispositivo está ligado)");
+      } else {
+        Serial.println("DESLIGADO (O dispositivo está desligado)");  
+      }
+    }
+
+    /*
     json.set("-MkA1cAXZuQW5ITG7Hhl/power", true);
     json.set("-MkA1cAXZuQW5ITG7Hhl/time", sendDataPrevMillis);
     json.set("-MkIPpNw2AR8JDbgCsi9/power", true);
     json.set("-MkIPpNw2AR8JDbgCsi9/time", sendDataPrevMillis);
 
-    Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, "devices_log", &json) ? "ok" : fbdo.errorReason().c_str());
+    Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, "devices_log", &json) ? "Data sent" : fbdo.errorReason().c_str());
+    */
   }
 }
