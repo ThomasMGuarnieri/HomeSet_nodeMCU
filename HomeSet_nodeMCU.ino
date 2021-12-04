@@ -19,6 +19,9 @@
 /* Firebase url do banco de dados */
 #define DATABASE_URL "https://homeset-b4916-default-rtdb.firebaseio.com/"
 
+/* Define o pino de saida */
+const int IN_PIN = D4;
+
 /* Firebase data object */
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -30,6 +33,8 @@ unsigned long sendDataPrevMillis = 0;
 
 void setup() {
   Serial.begin(115200);
+
+  pinMode(IN_PIN, OUTPUT);
 
   connectToInternet(WIFI_SSID, WIFI_PASSWORD);
 
@@ -70,13 +75,14 @@ void loop() {
 
     if (Firebase.RTDB.getJSON(&fbdo, "devices/", &searchJson)) {
       
-      searchJson.get(result, "-MkA1cAXZuQW5ITG7Hhl/power");
+      searchJson.get(result, "-MkIPpNw2AR8JDbgCsi9/power");
 
-      Serial.println(result.type);
       if (result.type == "boolean" && result.to<bool>() == true) {
         Serial.println("LIGADO (O dispositivo está ligado)");
+        digitalWrite(IN_PIN, LOW);
       } else {
         Serial.println("DESLIGADO (O dispositivo está desligado)");  
+        digitalWrite(IN_PIN, HIGH);
       }
     }
 
